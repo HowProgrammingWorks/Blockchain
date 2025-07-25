@@ -1,6 +1,6 @@
 'use strict';
 
-const { Blockchain } = require('./lib/storage.js');
+const Blockchain = require('./lib/storage.js');
 
 const main = async () => {
   const chain = await new Blockchain('./data');
