@@ -1,7 +1,7 @@
 'use strict';
 
-const Blockchain = require('./lib/storage.js');
-const SmartContract = require('./lib/contract.js');
+const { Blockchain } = require('./lib/chain.js');
+const { SmartContract } = require('./lib/contract.js');
 
 const main = async () => {
   const chain = await new Blockchain('./data');
@@ -18,17 +18,18 @@ const main = async () => {
   await chain.addBlock(record3);
   await chain.addBlock(record4);
 
-  const contract = new SmartContract(chain, async (blockchain, args) => {
-    console.log('Executing contract');
-    const hash = blockchain.tailHash;
-    const lastBlock = await blockchain.readBlock(hash);
+  const contract = new SmartContract(chain, async (reader, args) => {
+    const lastBlock = await reader.getLastBlock();
+    if (!lastBlock) throw new Error('No blocks found');
     const value = lastBlock.data.value * args.coefficient;
     const record = { ...lastBlock.data, value };
-    console.log('ok');
     return record;
   });
-
-  await contract.execute({ coefficient: 2.5 });
+  try {
+    await contract.execute({ coefficient: 2.5 });
+  } catch (err) {
+    console.error('Contract failed:', err);
+  }
 
   const valid = await chain.isValid({ last: 5 });
   console.log('Blockchain valid after adding:', valid);
